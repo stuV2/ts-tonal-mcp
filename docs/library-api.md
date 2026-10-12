@@ -62,7 +62,7 @@ Search for beginner upper-body sessions with a duration from 15 to 25 minutes:
 {
   "query": "strength",
   "difficulty": "Beginner",
-  "targetArea": "UpperBody",
+  "targetArea": "UPPER BODY",
   "minDurationMinutes": 15,
   "maxDurationMinutes": 25,
   "limit": 10,
@@ -96,7 +96,7 @@ These IDs are synthetic examples. Replace them with literal search result IDs. D
 
 Workout details include prescribed sets in their API array order, with movement IDs, block numbers, reps or durations, weight percentages and available programming flags. `order` is a 1-based array position, not a rewritten block number. Set duration values remain seconds and weight percentages are not pounds. Missing sets are null, not proof of an empty workout. These are prescriptions, not completed activity results. Use workout-activity tools for performed training.
 
-Program details include `weeks`, `workoutsPerWeek`, the supplied boolean `cadence`, `programWorkoutIds` and sessions with workout IDs, supplied workout numbers, program week/day and available session compatibility. Session order follows `programWorkoutIds` when present. Unlisted session records follow in their API order. Without that list, sessions sort by `workoutNumber`; without session records, they follow the `workouts` array. Repeated workouts remain separate sessions. Unresolved session IDs retain their ID but have a null workout ID. The tool never treats a session ID as a workout ID or invents dates for a missing schedule. Fetch individual workout details separately for prescribed sets.
+Program details include `weeks`, `workoutsPerWeek`, the supplied boolean `cadence`, `programWorkoutIds` and sessions with workout IDs, supplied workout numbers, program week/day and available session compatibility. Live API responses use workout IDs in `programWorkoutIds`; the reader also tolerates explicit session-record IDs by matching linked fields. Each session record is consumed once. Repeated workout references consume distinct records in workout-number order, so repeated workouts remain separate scheduled slots without doubling the list. Unlisted session records follow in their API order. Without the reference list, sessions sort by `workoutNumber`; without session records, known references resolve against the `workouts` array. Unknown references remain explicit as `unresolvedReferenceId` with a null workout ID, rather than guessing their type. The tool never invents dates for a missing schedule. Fetch individual workout details separately for prescribed sets.
 
 Publication is not a guarantee that a workout is playable on a particular machine. Compatibility fields are reported metadata, not a device handshake or entitlement check. Unknown compatibility is not approval. Search indexes may not include full metadata. Inspect details and verify availability in Tonal before training.
 
@@ -106,4 +106,4 @@ All four tools have `readOnlyHint: true` and `destructiveHint: false`. Existing 
 
 Tests use only synthetic records and mocked client methods. They cover registration, MCP listing/dispatch, validation before client initialization, paging/counts, case-insensitive matching, duration units, null metadata, compatibility, prescribed set order, program schedules and API errors. No live Tonal authentication or API smoke test is part of these tests.
 
-Run `npm run build`, `npm run typecheck`, `npm test` and `npm audit --omit=dev`. The upstream checkout ignores `package-lock.json`, so a fresh checkout needs `npm install --ignore-scripts --no-audit --no-fund` before `npm ci` can work. This feature preserves that policy and does not change dependency versions.
+Run `npm ci --ignore-scripts --no-audit --no-fund`, `npm run build`, `npm run typecheck`, `npm test` and `npm audit --omit=dev`. This fork tracks the npm lockfile for reproducible local and GitHub Actions verification, unlike the upstream ignore policy. No dependency ranges, author attribution or license were changed.

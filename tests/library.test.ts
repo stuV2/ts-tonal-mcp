@@ -256,6 +256,34 @@ test('program detail fallback sorts workoutNumber, preserves unknown ID-only ses
   assert.equal(fallback.cadence, null);
 });
 
+test('real API-shaped programWorkoutIds reference workout IDs without doubling sessions', async () => {
+  const other = '00000000-0000-4000-8000-000000000003';
+  const result = data(await call('get_library_program', fake({ getProgramById: async () => ({
+    ...program, programWorkoutIds: [workoutId, other],
+    programWorkouts: [
+      { id: 'record-b', workoutId: other, workoutNumber: 2, programWeek: 1, programDay: 2 },
+      { id: 'record-a', workoutId, workoutNumber: 1, programWeek: 1, programDay: 1 },
+    ], workouts: [workout, { ...workout, id: other }],
+  }) }), { programId }));
+  assert.equal(result.sessions.length, 2);
+  assert.deepEqual(result.sessions.map((s: any) => s.id), ['record-a', 'record-b']);
+  assert.deepEqual(result.sessions.map((s: any) => s.workoutId), [workoutId, other]);
+});
+
+test('repeated workout ID references consume distinct sessions in workout-number order', async () => {
+  const other = '00000000-0000-4000-8000-000000000003';
+  const result = data(await call('get_library_program', fake({ getProgramById: async () => ({
+    ...program, programWorkoutIds: [workoutId, other, workoutId],
+    programWorkouts: [
+      { id: 'record-c', workoutId, workoutNumber: 3 },
+      { id: 'record-b', workoutId: other, workoutNumber: 2 },
+      { id: 'record-a', workoutId, workoutNumber: 1 },
+    ], workouts: [workout, { ...workout, id: other }],
+  }) }), { programId }));
+  assert.equal(result.sessions.length, 3);
+  assert.deepEqual(result.sessions.map((s: any) => s.id), ['record-a', 'record-b', 'record-c']);
+});
+
 test('fractional duration bounds compare against seconds without rounding', async () => {
   const rows = [{ ...workout, duration: 1230 }, { ...workout, id: 'nearby', duration: 1229 }];
   const result = data(await call('search_workout_library', catalog(rows).client, { minDurationMinutes: 20.5, maxDurationMinutes: 20.5 }));

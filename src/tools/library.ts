@@ -156,12 +156,29 @@ function programSessions(row: LibraryRecord): Args[] {
   const sessions = Array.isArray(row.programWorkouts) ? row.programWorkouts.map(object) : [];
   const workouts = Array.isArray(row.workouts) ? row.workouts.map(object) : [];
   const ids = strings(row.programWorkoutIds);
-  // programWorkoutIds identifies session records, not necessarily workout IDs.
-  // Never invent workout IDs for unresolved session identifiers.
+  // Live responses reference workout IDs here; tolerate session-record IDs too.
+  // Match explicit linked fields, consume each record once, and never infer an
+  // unknown reference's type from its shape. Repeated workouts are separate slots.
   let ordered: Args[];
   if (ids?.length) {
-    ordered = ids.map(id => sessions.find(s => s.id === id) ?? { id });
-    ordered.push(...sessions.filter(s => !ids.includes(String(s.id))));
+    const consumed = new Set<number>();
+    const candidates = sessions.map((_, index) => index).sort((a, b) =>
+      (numeric(sessions[a].workoutNumber) ?? Infinity) - (numeric(sessions[b].workoutNumber) ?? Infinity));
+    ordered = ids.map(id => {
+      const exact = candidates.find(index => !consumed.has(index) && sessions[index].id === id);
+      const index = exact ?? candidates.find(index => !consumed.has(index) && sessions[index].workoutId === id);
+      if (index !== undefined) {
+        consumed.add(index);
+        return sessions[index];
+      }
+      const workout = workouts.find(w => w.id === id);
+      return workout ? {
+        workoutId: workout.id, workoutTitle: workout.title ?? workout.name,
+        duration: workout.duration, workoutNumber: workout.workoutNumber,
+        programWeek: workout.programWeek, programDay: workout.programDay,
+      } : { id, unresolvedReferenceId: id };
+    });
+    ordered.push(...sessions.filter((_, index) => !consumed.has(index)));
   } else if (sessions.length) {
     ordered = sessions.slice().sort((a, b) => (numeric(a.workoutNumber) ?? Infinity) - (numeric(b.workoutNumber) ?? Infinity));
   } else {
@@ -171,6 +188,7 @@ function programSessions(row: LibraryRecord): Args[] {
     const workout = workouts.find(w => w.id === session.workoutId);
     return {
       order: index + 1, id: text(session.id), workoutId: text(session.workoutId),
+      unresolvedReferenceId: text(session.unresolvedReferenceId),
       title: text(session.workoutTitle) ?? text(workout?.title) ?? text(workout?.name),
       workoutNumber: numeric(session.workoutNumber), programWeek: numeric(session.programWeek),
       programDay: numeric(session.programDay), durationMinutes: minutes(session.duration ?? workout?.duration),
