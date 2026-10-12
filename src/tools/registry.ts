@@ -14,6 +14,7 @@ import { getStrengthScores } from './strength-scores.js';
 import { estimateWorkoutDuration } from './workout-duration.js';
 import { listWorkoutActivities } from './workout-activities.js';
 import { getWorkoutActivityDetails, getWorkoutSummary } from './workout-activity-details.js';
+import { libraryTools } from './library.js';
 
 const setDetailsSchema = {
   type: 'array',
@@ -527,6 +528,11 @@ const movementTools: MCPToolDefinition[] = [
 
 // Tool Categories
 export const toolCategories: ToolCategory[] = [
+  {
+    name: 'library',
+    description: 'Read-only published guided workout and program library',
+    tools: libraryTools,
+  },
   {
     name: 'fitness',
     description: 'User fitness metrics, readiness, and progress tracking',

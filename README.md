@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server that provides LLMs with access to Tonal fi
 - 💪 **Muscle Readiness** - Get recovery status for workout planning
 - 📊 **Fitness Statistics** - View lifetime stats, streaks, and progress trends
 - 🎯 **Movement Database** - Browse and filter available Tonal exercises
+- **Guided library discovery** - Search published workouts/programs and inspect prescribed sets and program sessions without changing Tonal state
 - ✨ **Workout Creation and Editing** - Build and update custom workouts with per-set programming and supersets
 - 🔧 **Extensible Architecture** - Easy to add new tools via registry pattern
 
@@ -84,7 +85,7 @@ node dist/index.js
 
 ## Available Tools
 
-The server provides 18 tools for LLM interactions:
+The server provides the following tools for LLM interactions:
 
 | Tool | Description |
 |------|-------------|
@@ -106,6 +107,16 @@ The server provides 18 tools for LLM interactions:
 | `get_workout_for_editing` | Get the complete editable structure of an existing workout |
 | `update_workout` | Update an existing workout by replacing its full set list |
 | `estimate_workout_duration` | Estimate how long a prescribed workout would take, without creating or modifying anything |
+| `search_workout_library` | Search the full published workout index with text, difficulty, target area, duration, equipment and compatibility filters; bounded local paging |
+| `search_program_library` | Search the full published program index with text, difficulty, weeks, workouts per week and compatibility filters; bounded local paging |
+| `get_library_workout` | Read a literal workout UUID with ordered prescribed sets and movement IDs, not performed activity data |
+| `get_library_program` | Read a literal program UUID with ordered session workout IDs and supplied schedule, without enrollment |
+
+### Read-only guided library
+
+Start with `search_workout_library` or `search_program_library`, then pass a returned ID to the matching detail tool. Search defaults to 10 results, allows at most 50, and returns exact `total`, `returned`, `offset`, `limit` and `has_more` metadata after local filtering. Duration filters use minutes, while the API stores seconds.
+
+These four tools are read-only. They do not make the whole server read-only; existing custom-workout write tools remain unchanged. Publication and compatibility metadata do not guarantee playback on a particular machine. Program index workout arrays may be empty even when program details include sessions. See [library API notes](docs/library-api.md) for filter semantics, examples and limitations.
 
 ### Per-set programming
 

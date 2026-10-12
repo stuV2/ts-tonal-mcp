@@ -24,8 +24,12 @@ export interface MCPToolDefinition {
     type: 'object';
     properties: Record<string, any>;
     required: string[];
+    additionalProperties?: boolean;
   };
   annotations?: ToolAnnotations;
+  // Optional preflight before getClient can initialize authentication/network I/O.
+  // Handlers must also validate for direct callers.
+  validateArgs?: (args?: Record<string, unknown>) => void;
   handler: (client: TonalClient, args?: Record<string, unknown>) => Promise<MCPResponse>;
 }
 
